@@ -12,6 +12,10 @@ RETURNING *;
 SELECT * FROM accounts
 WHERE id = $1 LIMIT 1;
 
+-- name: GetAccountForOwner :one
+SELECT * FROM accounts
+WHERE owner = $1 LIMIT 1;
+
 -- name: GetAccountForUpdate :one
 SELECT * FROM accounts
 WHERE id = $1 LIMIT 1
