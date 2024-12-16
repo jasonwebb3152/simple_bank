@@ -6,24 +6,22 @@ import (
 	"os"
 	"testing"
 
+	"github.com/jasonwebb3152/simplebank/util"
 	_ "github.com/lib/pq"
 )
 
 var (
 	testQueries *Queries
 	testDB      *sql.DB
-	err         error
-)
-
-// TODO: load from environment variables
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable"
 )
 
 // Specially-named entry function for all tests in a go package
 func TestMain(m *testing.M) {
-	testDB, err = sql.Open(dbDriver, dbSource)
+	config, err := util.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("could not load config", err)
+	}
+	testDB, err = sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
