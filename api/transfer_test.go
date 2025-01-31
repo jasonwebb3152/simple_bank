@@ -72,6 +72,19 @@ func TestCreateTransfer(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
+		{
+			name:        "Unauthorized",
+			fromAccount: account1,
+			toAccount:   account2,
+			currency:    "USD",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore, fromAccount, toAccount db.Account, amount int64) {
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
 		// TODO: add test cases for errors (needed for wrong request inputs, auth, invalid data...)
 	}
 
