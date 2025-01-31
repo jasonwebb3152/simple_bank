@@ -2,11 +2,13 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/jasonwebb3152/simplebank/db/sqlc"
+	"github.com/jasonwebb3152/simplebank/token"
 )
 
 // No balance because should always be zero on creation.
@@ -24,11 +26,11 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !server.validAccount(ctx, req.FromAccountID, req.Currency) {
+	if !server.validAccount(ctx, req.FromAccountID, req.Currency, true) {
 		return
 	}
 
-	if !server.validAccount(ctx, req.FromAccountID, req.Currency) {
+	if !server.validAccount(ctx, req.ToAccountID, req.Currency, false) {
 		return
 	}
 
@@ -47,7 +49,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) bool {
+func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string, isFromAccount bool) bool {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -56,6 +58,13 @@ func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency s
 		}
 
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return false
+	}
+
+	payload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if isFromAccount && account.Owner != payload.Username {
+		err := errors.New("transferring account doesn't belong to authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return false
 	}
 
