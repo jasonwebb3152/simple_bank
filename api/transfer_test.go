@@ -85,7 +85,7 @@ func TestCreateTransfer(t *testing.T) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
 			},
 		},
-		// TODO: add test cases for errors (needed for wrong request inputs, auth, invalid data...)
+		// TODO: add test cases for errors (needed for wrong request inputs, invalid data...)
 	}
 
 	for _, tc := range testCases {
