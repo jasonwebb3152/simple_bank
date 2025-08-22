@@ -1,4 +1,3 @@
-version: "3.9"
 services:
 
   api:
@@ -6,23 +5,25 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-     - "8080:8080"
+      - "8080:8080"
     environment:
       - DB_SOURCE=postgresql://root:secret@postgres:5432/simple_bank?sslmode=disable
     depends_on:
-      postgres:
-        condition: service_healthy
-        restart: true
+      - postgres
+    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh" ]
+    command: [ "/app/main" ]
 
   postgres:
     image: postgres:17-alpine
+    restart: always
     environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=simple_bank
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
-      interval: 10s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: simple_bank
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

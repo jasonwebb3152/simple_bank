@@ -18,7 +18,9 @@ COPY --from=builder /app/migrate ./migrate
 COPY db/migration ./migration
 COPY app.env .
 COPY start.sh .
+COPY wait-for.sh .
 RUN chmod +x /app/start.sh
+RUN chmod +x /app/wait-for.sh
 
 # Container listens on this port (doesn't actually publish the port, just documents it)
 EXPOSE 8080
