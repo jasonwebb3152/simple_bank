@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	mockdb "github.com/jasonwebb3152/simplebank/db/mock"
 	db "github.com/jasonwebb3152/simplebank/db/sqlc"
 	"github.com/jasonwebb3152/simplebank/util"
@@ -200,6 +201,76 @@ func TestCreateUserAPI(t *testing.T) {
 
 			tc.checkResponse(recorder)
 		})
+	}
+}
+
+func TestLoginUserAPI(t *testing.T) {
+	user, password := randomUser(t)
+	session := randomSession(t)
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			body: gin.H{
+				"username": user.Username,
+				"password": password,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetUser(gomock.Any(), gomock.Eq(user.Username)).
+					Times(1).
+					Return(user, nil)
+				store.EXPECT().
+					CreateSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(session, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		// TODO: Add more test cases for failures.
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockStore := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(mockStore)
+
+			server := newTestServer(t, mockStore)
+			recorder := httptest.NewRecorder()
+
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := "/users/login"
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func randomSession(t *testing.T) db.Session {
+	return db.Session{
+		ID:           uuid.New(),
+		Username:     util.RandomString(8),
+		RefreshToken: util.RandomString(8),
+		UserAgent:    util.RandomString(8),
+		ClientIp:     util.RandomString(8),
+		IsBlocked:    false,
+		ExpiresAt:    time.Now(),
+		CreatedAt:    time.Now(),
 	}
 }
 
