@@ -118,6 +118,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 
 	// Create refresh token in the same way
@@ -127,6 +128,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 
 	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{

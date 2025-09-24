@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package pb;
+
+import "user.proto";
+
+option go_package = "github.com/jasonwebb3152/simplebank/pb";
+
+// Smaller number for id require less bytes to repr
+message CreateUserRequest {
+    string username = 1;
+    string full_name = 2;
+    string email = 3;
+    string password = 4;
+}
+
+message CreateUserResponse {
+    User user = 1;
+}
